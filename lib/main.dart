@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   runApp(const TodoApp());
@@ -29,21 +30,41 @@ class TodoHomePage extends StatefulWidget {
 
 class _TodoHomePageState extends State<TodoHomePage> {
   final TextEditingController taskController = TextEditingController();
-  final List<String> tasks = [];
+  List<String> tasks = [];
 
-  void addTask() {
+  @override
+  void initState() {
+    super.initState();
+    loadTasks();
+  }
+
+  Future<void> loadTasks() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      tasks = prefs.getStringList('tasks') ?? [];
+    });
+  }
+
+  Future<void> saveTasks() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList('tasks', tasks);
+  }
+
+  Future<void> addTask() async {
     if (taskController.text.trim().isNotEmpty) {
       setState(() {
         tasks.add(taskController.text.trim());
       });
       taskController.clear();
+      await saveTasks();
     }
   }
 
-  void deleteTask(int index) {
+  Future<void> deleteTask(int index) async {
     setState(() {
       tasks.removeAt(index);
     });
+    await saveTasks();
   }
 
   @override
